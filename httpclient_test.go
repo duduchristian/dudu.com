@@ -9,6 +9,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"log"
 	"net/http"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -16,6 +17,15 @@ import (
 
 func prepareServer(b *testing.B) int {
 	pid, err := syscall.ForkExec("./cmd/main", []string{""}, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	time.Sleep(300 * time.Millisecond)
+	return pid
+}
+
+func prepareHertzServer(b *testing.B) int {
+	pid, err := syscall.ForkExec("./cmd/main", []string{"", "-use-fasthttp"}, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -35,7 +45,7 @@ func stopChildProcess(b *testing.B, pid int) {
 		return
 	}
 	if wpid != pid {
-		b.Errorf("wpid is wrong")
+		b.Error("wpid is wrong")
 		return
 	}
 	fmt.Printf("%d Done\n", pid)
@@ -44,6 +54,7 @@ func stopChildProcess(b *testing.B, pid int) {
 func BenchmarkHttp(b *testing.B) {
 	pid := prepareServer(b)
 
+	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		c := &http.Client{}
 		for pb.Next() {
@@ -53,6 +64,7 @@ func BenchmarkHttp(b *testing.B) {
 			}
 		}
 	})
+	b.StopTimer()
 
 	stopChildProcess(b, pid)
 }
@@ -60,6 +72,7 @@ func BenchmarkHttp(b *testing.B) {
 func BenchmarkFasthttp(b *testing.B) {
 	pid := prepareServer(b)
 
+	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		c := &fasthttp.HostClient{
 			Addr: "localhost:8080",
@@ -77,13 +90,30 @@ func BenchmarkFasthttp(b *testing.B) {
 			}
 		}
 	})
+	b.StopTimer()
 
 	stopChildProcess(b, pid)
+}
+
+var (
+	respPool = sync.Pool{New: func() any {
+		return &protocol.Response{}
+	}}
+)
+
+func getResponse() *protocol.Response {
+	return respPool.Get().(*protocol.Response)
+}
+
+func putResponse(res *protocol.Response) {
+	res.Reset()
+	respPool.Put(res)
 }
 
 func BenchmarkHertz(b *testing.B) {
 	pid := prepareServer(b)
 
+	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		c, err := client.NewClient()
 		if err != nil {
@@ -94,13 +124,15 @@ func BenchmarkHertz(b *testing.B) {
 		req.SetRequestURI("http://localhost:8080/v1/test")
 
 		for pb.Next() {
-			res := &protocol.Response{}
+			res := getResponse()
 			err = c.Do(context.Background(), req, res)
 			if err != nil {
 				b.Fatalf("Error: %v", err)
 			}
+			putResponse(res)
 		}
 	})
+	b.StopTimer()
 
 	stopChildProcess(b, pid)
 }
