@@ -109,7 +109,7 @@ func DoPostTask(c *fasthttp.HostClient, key, title string) {
 }
 
 func DoTest(c *fasthttp.HostClient) {
-	statusCode, _, err := c.Get(nil, "http://localhost:8080/v1/test")
+	statusCode, _, err := c.Get(nil, "http://localhost:8080/v1/test/pub10000")
 	if err != nil {
 		log.Fatalf("Error when request through local proxy: %v", err)
 	}

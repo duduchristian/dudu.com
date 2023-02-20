@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/amitshekhariitbhu/go-backend-clean-architecture/metrics"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
@@ -32,6 +33,7 @@ func main() {
 
 	if !useHertzHttpServer() {
 		gin := gin.Default()
+		metrics.InitRouter(gin)
 		routerV1 := gin.Group("v1")
 		routeV1.Setup(env, timeout, db, routerV1)
 		addr := env.ServerAddress

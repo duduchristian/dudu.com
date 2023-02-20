@@ -11,7 +11,7 @@ import (
 )
 
 func NewTestRouter(env *bootstrap.Env, timeout time.Duration, group *gin.RouterGroup) {
-	group.GET("/test", func(context *gin.Context) {
+	group.GET("/test/:publisherId", func(context *gin.Context) {
 		fmt.Fprintf(context.Writer, "Hello World!")
 	})
 }
