@@ -1,11 +1,11 @@
 package metrics
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -32,7 +32,7 @@ func WithPublisherRpsMetric(ops *prometheus.CounterVec) gin.HandlerFunc {
 			apiPath = path.Base(context.FullPath())
 		}
 		//metrics.GetOrCreateCounter(fmt.Sprintf(`bidder_processed_ops_total{path="%s"}`, apiPath)).Inc()
-		counter := ops.WithLabelValues(fmt.Sprintf("%s", apiPath))
+		counter := ops.WithLabelValues(strings.Clone(apiPath))
 		counter.Inc()
 		lock.Lock()
 		counterMap[counter] = struct{}{}

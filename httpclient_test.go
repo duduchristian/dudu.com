@@ -58,7 +58,7 @@ func BenchmarkHttp(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		c := &http.Client{}
 		for pb.Next() {
-			_, err := c.Get("http://localhost:8080/v1/test")
+			_, err := c.Get("http://localhost:8080/v1/test/abc")
 			if err != nil {
 				b.Fatalf("Error: %v", err)
 			}
@@ -78,7 +78,7 @@ func BenchmarkFasthttp(b *testing.B) {
 			Addr: "localhost:8080",
 		}
 		for pb.Next() {
-			statusCode, _, err := c.Get(nil, "http://localhost:8080/v1/test")
+			statusCode, _, err := c.Get(nil, "http://localhost:8080/v1/test/abc")
 			if err != nil {
 				log.Fatalf("Error when request through local proxy: %v", err)
 			}
@@ -121,7 +121,7 @@ func BenchmarkHertz(b *testing.B) {
 		}
 		req := &protocol.Request{}
 		req.SetMethod(consts.MethodGet)
-		req.SetRequestURI("http://localhost:8080/v1/test")
+		req.SetRequestURI("http://localhost:8080/v1/test/abc")
 
 		for pb.Next() {
 			res := getResponse()
