@@ -1,11 +1,11 @@
 package metrics
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"path"
-	"strings"
 	"sync"
 )
 
@@ -22,7 +22,7 @@ func InitRouter(router gin.IRouter) {
 	})
 }
 
-var counterMap = map[prometheus.Counter]struct{}{}
+var stringMap = map[string]struct{}{}
 var lock sync.Mutex
 
 func WithPublisherRpsMetric(ops *prometheus.CounterVec) gin.HandlerFunc {
@@ -32,10 +32,24 @@ func WithPublisherRpsMetric(ops *prometheus.CounterVec) gin.HandlerFunc {
 			apiPath = path.Base(context.FullPath())
 		}
 		//metrics.GetOrCreateCounter(fmt.Sprintf(`bidder_processed_ops_total{path="%s"}`, apiPath)).Inc()
-		counter := ops.WithLabelValues(strings.Clone(apiPath))
+		counter := ops.WithLabelValues(apiPath)
 		counter.Inc()
 		lock.Lock()
-		counterMap[counter] = struct{}{}
+		stringMap[context.Request.Header.Get("Test-Flag")] = struct{}{}
+		if repeat, ok := checkoutRepeat(stringMap); ok {
+			fmt.Println(repeat)
+		}
 		lock.Unlock()
 	}
+}
+
+func checkoutRepeat(m map[string]struct{}) (string, bool) {
+	s := map[string]struct{}{}
+	for k := range m {
+		if _, ok := s[k]; ok {
+			return k, true
+		}
+		s[k] = struct{}{}
+	}
+	return "", false
 }

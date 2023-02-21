@@ -6,6 +6,7 @@ import (
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/domain"
 	"github.com/valyala/fasthttp"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
@@ -109,7 +110,23 @@ func DoPostTask(c *fasthttp.HostClient, key, title string) {
 }
 
 func DoTest(c *fasthttp.HostClient) {
-	statusCode, _, err := c.Get(nil, "http://localhost:8080/v1/test/pub10000")
+	req := fasthttp.AcquireRequest()
+	res := fasthttp.AcquireResponse()
+	defer func() {
+		fasthttp.ReleaseRequest(req)
+		fasthttp.ReleaseResponse(res)
+	}()
+
+	req.SetRequestURI(fmt.Sprintf("%s/test/pub10000", urlPrefix))
+	req.Header.SetMethod("GET")
+	req.Header.Set("Content-Type", "application/json")
+	if rand.Intn(2) == 0 {
+		req.Header.Set("Test-Flag", "dudu")
+	} else {
+		req.Header.Set("Test-Flag", "christian")
+	}
+	err := c.Do(req, res)
+	statusCode := res.StatusCode()
 	if err != nil {
 		log.Fatalf("Error when request through local proxy: %v", err)
 	}

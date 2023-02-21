@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/amitshekhariitbhu/go-backend-clean-architecture/httputil"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/metrics"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
 	"os"
 	"time"
 
@@ -41,7 +41,7 @@ func main() {
 		if !useFastHttpServer() {
 			gin.Run(addr)
 		} else {
-			if err := fasthttp.ListenAndServe(addr, fasthttpadaptor.NewFastHTTPHandler(gin.Handler())); err != nil {
+			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
 				panic(err)
 			}
 		}
