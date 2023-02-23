@@ -3,7 +3,7 @@ module github.com/amitshekhariitbhu/go-backend-clean-architecture
 go 1.19
 
 require (
-	github.com/VictoriaMetrics/metrics v1.23.0
+	github.com/ajg/form v1.5.1
 	github.com/cloudwego/hertz v0.5.1
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-gonic/gin v1.8.2
@@ -14,6 +14,7 @@ require (
 	github.com/valyala/fasthttp v1.44.0
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/crypto v0.4.0
+	rogchap.com/v8go v0.8.0
 )
 
 require (
@@ -68,8 +69,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fastrand v1.1.0 // indirect
-	github.com/valyala/histogram v1.2.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
