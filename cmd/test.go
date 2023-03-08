@@ -42,7 +42,7 @@ func main() {
 	for i := 0; i < numWorker; i++ {
 		go func() {
 			start := time.Now()
-			doTest(10000)
+			doTest(1000)
 			timesLock.Lock()
 			times = append(times, time.Since(start))
 			timesLock.Unlock()

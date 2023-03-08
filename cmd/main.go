@@ -6,6 +6,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/prefork"
 	"os"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 const (
 	useHertzFlag    = "-use-hertz"
 	useFastHttpFlag = "-use-fasthttp"
+	usePreforkFlag  = "-use-prefork"
 )
 
 func main() {
@@ -41,6 +43,16 @@ func main() {
 		if !useFastHttpServer() {
 			gin.Run(addr)
 		} else {
+			if usePrefork() {
+				s := &fasthttp.Server{
+					Handler: httputil.NewFastHTTPHandler(gin.Handler()),
+				}
+				p := prefork.New(s)
+				if err := p.ListenAndServe(addr); err != nil {
+					panic(err)
+				}
+				return
+			}
 			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
 				panic(err)
 			}
@@ -67,6 +79,15 @@ func useHertzHttpServer() bool {
 func useFastHttpServer() bool {
 	for _, arg := range os.Args {
 		if arg == useFastHttpFlag {
+			return true
+		}
+	}
+	return false
+}
+
+func usePrefork() bool {
+	for _, arg := range os.Args {
+		if arg == usePreforkFlag {
 			return true
 		}
 	}
