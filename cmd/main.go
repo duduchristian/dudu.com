@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/httputil"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/metrics"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/prefork"
+	"io"
 	"os"
 	"time"
 
@@ -23,6 +26,9 @@ const (
 )
 
 func main() {
+	var logDir string
+	flag.StringVar(&logDir, "log_dir", "./log", "Specify log directory")
+
 	app := bootstrap.App()
 
 	env := app.Env
@@ -33,6 +39,13 @@ func main() {
 	timeout := time.Duration(env.ContextTimeout) * time.Second
 
 	if !useHertzHttpServer() {
+		f, err := os.OpenFile(fmt.Sprintf("%s/app01.log", logDir), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		gin.DefaultWriter = io.MultiWriter(f)
+
 		gin := gin.Default()
 		metrics.InitRouter(gin)
 		routerV1 := gin.Group("v1")
@@ -54,9 +67,6 @@ func main() {
 			}
 			fs := httputil.NewFasthttpServer(httputil.NewFastHTTPHandler(gin.Handler()))
 			if err := fs.ListenAndServe(addr); err != nil {
-				panic(err)
-			}
-			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
 				panic(err)
 			}
 		}

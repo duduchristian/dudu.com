@@ -1,11 +1,14 @@
-FROM golang:1.19-alpine
+FROM debian:stable-20230208-slim
 
-RUN mkdir /app
+# create service dir
+RUN mkdir -p /service/log
 
-ADD . /app
+# set user env for glog
+ENV USER=root
 
-WORKDIR /app
+# copy service files
+WORKDIR /service
+COPY .env .
+COPY main .
 
-RUN go build -o main cmd/main.go
-
-CMD ["/app/main"]
+ENTRYPOINT ["/service/main", "-log_dir=./log"]

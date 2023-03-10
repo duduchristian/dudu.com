@@ -1,7 +1,7 @@
 package httputil
 
 import (
-	"github.com/panjf2000/gnet"
+	"github.com/panjf2000/gnet/v2"
 	"github.com/valyala/fasthttp"
 	"math/rand"
 	"net"
@@ -11,7 +11,7 @@ import (
 const NumWorker = 1
 
 type FasthttpServer struct {
-	*gnet.EventServer
+	*gnet.BuiltinEventEngine
 	lns    [NumWorker]*InmemoryListener
 	server *fasthttp.Server
 	lock   sync.Mutex
@@ -39,7 +39,7 @@ func (fs *FasthttpServer) ListenAndServe(addr string) error {
 			_ = fs.server.Serve(fs.lns[index])
 		}(i)
 	}
-	return gnet.Serve(fs, addr, gnet.WithMulticore(true), gnet.WithReusePort(true))
+	return gnet.Run(fs, addr, gnet.WithMulticore(true), gnet.WithReusePort(true))
 }
 
 var bytesPool = &sync.Pool{
@@ -54,6 +54,33 @@ func getBytes() []byte {
 
 func putBytes(b []byte) {
 	bytesPool.Put(b)
+}
+
+func (fs *FasthttpServer) OnTraffic(c gnet.Conn) (action gnet.Action) {
+	ln := fs.lns[rand.Intn(NumWorker)]
+	conn, _ := ln.DialWithLocalAddr(c.RemoteAddr())
+	defer conn.Close()
+	inputData := getBytes()
+	defer putBytes(inputData)
+	n, _ := c.Read(inputData)
+	nn := n
+
+	for len(inputData) == nn {
+		frame := getBytes()
+		n, _ = c.Read(frame)
+		temp := inputData
+		inputData = make([]byte, len(inputData)+len(frame))
+		copy(inputData, temp)
+		copy(inputData[nn:], frame[:n])
+		nn += n
+		putBytes(temp)
+		putBytes(frame)
+	}
+
+	conn.Write(inputData[:nn])
+	out, _ := conn.(*pipeConn).ReadAll()
+	c.Write(out)
+	return
 }
 
 func (fs *FasthttpServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
