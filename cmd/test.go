@@ -42,7 +42,7 @@ func main() {
 	for i := 0; i < numWorker; i++ {
 		go func() {
 			start := time.Now()
-			doTest(1000)
+			doTest(10000)
 			timesLock.Lock()
 			times = append(times, time.Since(start))
 			timesLock.Unlock()
@@ -74,7 +74,7 @@ func doTest(count int) {
 			duducom.DoProfile(c, key)
 		case 2:
 			tasks := duducom.DoGetTask(c, key)
-			if len(tasks) < count {
+			if len(tasks) < 50 {
 				duducom.DoPostTask(c, key, "a task")
 			}
 		}

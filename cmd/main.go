@@ -23,7 +23,6 @@ const (
 )
 
 func main() {
-
 	app := bootstrap.App()
 
 	env := app.Env
@@ -52,6 +51,10 @@ func main() {
 					panic(err)
 				}
 				return
+			}
+			fs := httputil.NewFasthttpServer(httputil.NewFastHTTPHandler(gin.Handler()))
+			if err := fs.ListenAndServe(addr); err != nil {
+				panic(err)
 			}
 			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
 				panic(err)
