@@ -12,7 +12,7 @@ type BanlancedPool struct {
 	size  int
 }
 
-func NewBanlancedPool(new func() any) *BanlancedPool {
+func NewBanlancedPool(new func() interface{}) *BanlancedPool {
 	size := runtime.NumCPU()
 	size = 1
 	bp := &BanlancedPool{
