@@ -65,6 +65,9 @@ func main() {
 				}
 				return
 			}
+			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
+				panic(err)
+			}
 			fs := httputil.NewFasthttpServer(httputil.NewFastHTTPHandler(gin.Handler()))
 			if err := fs.ListenAndServe(addr); err != nil {
 				panic(err)

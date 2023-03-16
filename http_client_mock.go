@@ -109,6 +109,15 @@ func DoPostTask(c *fasthttp.HostClient, key, title string) {
 	}
 }
 
+func generateRandomBytes() []byte {
+	length := rand.Intn(4096)
+	b := make([]byte, length)
+	for i := 0; i < length; i++ {
+		b[i] = 'a'
+	}
+	return b
+}
+
 func DoTest(c *fasthttp.HostClient) {
 	req := fasthttp.AcquireRequest()
 	res := fasthttp.AcquireResponse()
@@ -125,6 +134,7 @@ func DoTest(c *fasthttp.HostClient) {
 	} else {
 		req.Header.Set("Test-Flag", "christian")
 	}
+	req.SetBody(generateRandomBytes())
 	err := c.Do(req, res)
 	statusCode := res.StatusCode()
 	if err != nil {

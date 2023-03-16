@@ -67,7 +67,7 @@ func doTest(count int) {
 	key := generateKey(res)
 
 	for count > 0 {
-		switch rand.Intn(3) {
+		switch rand.Intn(1) {
 		case 0:
 			duducom.DoTest(c)
 		case 1:
