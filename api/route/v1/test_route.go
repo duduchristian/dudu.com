@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/bootstrap"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/httputil"
+	middleware2 "github.com/amitshekhariitbhu/go-backend-clean-architecture/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/route"
 	"github.com/gin-gonic/gin"
@@ -42,15 +43,10 @@ func b2s(b []byte) string {
 
 func NewTestRouter(env *bootstrap.Env, timeout time.Duration, group *gin.RouterGroup) {
 	group.GET("/test/:publisherId", func(context *gin.Context) {
-		b, _ := ReadAll(context.Request.Body)
-		defer func() {
-			b.Reset()
-			bp.Put(b)
-		}()
-
+		b, _ := middleware2.ReadAll(context, context.Request.Body)
 		context.Request.Body.Close()
 		fmt.Println(context.Request.URL.Query())
-		fmt.Fprintf(context.Writer, b2s(b.Bytes()))
+		fmt.Fprintf(context.Writer, b2s(b))
 	})
 	group.GET("/test1/:publisherId", func(context *gin.Context) {
 		b, _ := io.ReadAll(context.Request.Body)

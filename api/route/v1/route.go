@@ -1,6 +1,7 @@
 package route
 
 import (
+	middleware2 "github.com/amitshekhariitbhu/go-backend-clean-architecture/middleware"
 	"time"
 
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/api/middleware"
@@ -10,7 +11,7 @@ import (
 )
 
 func Setup(env *bootstrap.Env, timeout time.Duration, db mongo.Database, routerV1 *gin.RouterGroup) {
-	publicRouterV1 := routerV1.Group("")
+	publicRouterV1 := routerV1.Group("", middleware2.WithBufferReleaser())
 	// All Public APIs
 	NewSignupRouter(env, timeout, db, publicRouterV1)
 	NewLoginRouter(env, timeout, db, publicRouterV1)
