@@ -45,14 +45,12 @@ func NewTestRouter(env *bootstrap.Env, timeout time.Duration, group *gin.RouterG
 	group.GET("/test/:publisherId", func(context *gin.Context) {
 		b, _ := middleware2.ReadAll(context, context.Request.Body)
 		context.Request.Body.Close()
-		fmt.Println(context.Request.URL.Query())
 		fmt.Fprintf(context.Writer, b2s(b))
 	})
 	group.GET("/test1/:publisherId", func(context *gin.Context) {
 		b, _ := io.ReadAll(context.Request.Body)
 
 		context.Request.Body.Close()
-		fmt.Println(context.Request.URL.Query())
 		fmt.Fprintf(context.Writer, b2s(b))
 	})
 }
