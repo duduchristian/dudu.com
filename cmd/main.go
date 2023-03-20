@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/httputil"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/metrics"
+	"github.com/amitshekhariitbhu/go-backend-clean-architecture/tuner"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
@@ -23,9 +24,22 @@ const (
 	useHertzFlag    = "-use-hertz"
 	useFastHttpFlag = "-use-fasthttp"
 	usePreforkFlag  = "-use-prefork"
+	useTunerFlag    = "-use-tuner"
 )
 
+func initProcess() {
+	var (
+		inCgroup = true
+		percent  = 70.0
+	)
+	tuner.NewTuner(inCgroup, percent)
+}
+
 func main() {
+	if useTuner() {
+		fmt.Println("Use tuner!!!")
+		initProcess()
+	}
 	var logDir string
 	flag.StringVar(&logDir, "log_dir", "./log", "Specify log directory")
 
@@ -104,6 +118,15 @@ func useFastHttpServer() bool {
 func usePrefork() bool {
 	for _, arg := range os.Args {
 		if arg == usePreforkFlag {
+			return true
+		}
+	}
+	return false
+}
+
+func useTuner() bool {
+	for _, arg := range os.Args {
+		if arg == useTunerFlag {
 			return true
 		}
 	}
