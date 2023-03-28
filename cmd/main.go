@@ -6,8 +6,6 @@ import (
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/httputil"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/metrics"
 	"github.com/amitshekhariitbhu/go-backend-clean-architecture/tuner"
-	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/cloudwego/hertz/pkg/common/config"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/prefork"
 	"io"
@@ -21,7 +19,6 @@ import (
 )
 
 const (
-	useHertzFlag    = "-use-hertz"
 	useFastHttpFlag = "-use-fasthttp"
 	usePreforkFlag  = "-use-prefork"
 	useTunerFlag    = "-use-tuner"
@@ -30,7 +27,7 @@ const (
 func initProcess() {
 	var (
 		inCgroup = true
-		percent  = 70.0
+		percent  = 90.0
 	)
 	tuner.NewTuner(inCgroup, percent)
 }
@@ -52,58 +49,40 @@ func main() {
 
 	timeout := time.Duration(env.ContextTimeout) * time.Second
 
-	if !useHertzHttpServer() {
-		f, err := os.OpenFile(fmt.Sprintf("%s/app01.log", logDir), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
-		if err != nil {
+	f, err := os.OpenFile(fmt.Sprintf("%s/app01.log", logDir), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	gin.DefaultWriter = io.MultiWriter(f)
+
+	gin := gin.Default()
+	metrics.InitRouter(gin)
+	routerV1 := gin.Group("v1")
+	routeV1.Setup(env, timeout, db, routerV1)
+	addr := env.ServerAddress
+	pprof.Register(gin)
+	if !useFastHttpServer() {
+		gin.Run(addr)
+	} else {
+		if usePrefork() {
+			s := &fasthttp.Server{
+				Handler: httputil.NewFastHTTPHandler(gin.Handler()),
+			}
+			p := prefork.New(s)
+			if err := p.ListenAndServe(addr); err != nil {
+				panic(err)
+			}
+			return
+		}
+		if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
 			panic(err)
 		}
-		defer f.Close()
-		gin.DefaultWriter = io.MultiWriter(f)
-
-		gin := gin.Default()
-		metrics.InitRouter(gin)
-		routerV1 := gin.Group("v1")
-		routeV1.Setup(env, timeout, db, routerV1)
-		addr := env.ServerAddress
-		pprof.Register(gin)
-		if !useFastHttpServer() {
-			gin.Run(addr)
-		} else {
-			if usePrefork() {
-				s := &fasthttp.Server{
-					Handler: httputil.NewFastHTTPHandler(gin.Handler()),
-				}
-				p := prefork.New(s)
-				if err := p.ListenAndServe(addr); err != nil {
-					panic(err)
-				}
-				return
-			}
-			if err := fasthttp.ListenAndServe(addr, httputil.NewFastHTTPHandler(gin.Handler())); err != nil {
-				panic(err)
-			}
-			fs := httputil.NewFasthttpServer(httputil.NewFastHTTPHandler(gin.Handler()))
-			if err := fs.ListenAndServe(addr); err != nil {
-				panic(err)
-			}
-		}
-	} else {
-		h := server.Default(config.Option{F: func(o *config.Options) {
-			o.Addr = env.ServerAddress
-		}})
-		v1 := h.Group("/v1")
-		routeV1.NewTestRouterHertz(env, timeout, v1)
-		h.Spin()
-	}
-}
-
-func useHertzHttpServer() bool {
-	for _, arg := range os.Args {
-		if arg == useHertzFlag {
-			return true
+		fs := httputil.NewFasthttpServer(httputil.NewFastHTTPHandler(gin.Handler()))
+		if err := fs.ListenAndServe(addr); err != nil {
+			panic(err)
 		}
 	}
-	return false
 }
 
 func useFastHttpServer() bool {

@@ -67,14 +67,14 @@ func doTest(count int) {
 	key := generateKey(res)
 
 	for count > 0 {
-		switch rand.Intn(1) {
+		switch rand.Intn(3) {
 		case 0:
 			duducom.DoTest(c)
 		case 1:
 			duducom.DoProfile(c, key)
 		case 2:
 			tasks := duducom.DoGetTask(c, key)
-			if len(tasks) < 50 {
+			if len(tasks) < 100 {
 				duducom.DoPostTask(c, key, "a task")
 			}
 		}
